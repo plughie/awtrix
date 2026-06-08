@@ -1,0 +1,22 @@
+# Local config with personal IPs / MQTT credentials — never commit this.
+config.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.Python
+build/
+dist/
+
+# Task Scheduler temp file
+_task.xml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

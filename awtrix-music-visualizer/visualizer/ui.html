@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWTRIX Visualizer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 1.5rem;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 1rem; color: #00ffaa; }
+  .group { margin-bottom: 1.2rem; }
+  .group h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    gap: 0.8rem;
+  }
+  label span { flex: 0 0 auto; font-size: 0.85rem; }
+  input[type="range"] { flex: 1; accent-color: #00ffaa; }
+  input[type="text"], input[type="color"], select {
+    flex: 1;
+    background: #16213e;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  input[type="color"] { height: 2rem; padding: 2px; cursor: pointer; }
+  select { cursor: pointer; }
+  .val { font-size: 0.75rem; color: #00ffaa; min-width: 3ch; text-align: right; }
+  .toggle { position: relative; width: 40px; height: 22px; flex: 0 0 40px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider {
+    position: absolute; inset: 0; background: #333; border-radius: 11px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .toggle .slider::before {
+    content: ''; position: absolute; left: 3px; top: 3px;
+    width: 16px; height: 16px; background: #e0e0e0;
+    border-radius: 50%; transition: transform 0.2s;
+  }
+  .toggle input:checked + .slider { background: #00ffaa; }
+  .toggle input:checked + .slider::before { transform: translateX(18px); }
+  .status {
+    position: fixed; bottom: 1rem; right: 1rem;
+    font-size: 0.7rem; color: #666;
+  }
+</style>
+</head>
+<body>
+<h1>&#9835; AWTRIX Visualizer</h1>
+
+<div class="group">
+  <label>
+    <span>Enabled</span>
+    <span class="toggle">
+      <input type="checkbox" id="enabled" checked>
+      <span class="slider"></span>
+    </span>
+  </label>
+</div>
+
+<div class="group">
+  <h2>Sensitivity</h2>
+  <label>
+    <span>Gain</span>
+    <input type="range" id="gain" min="0.2" max="3.0" step="0.1">
+    <span class="val" id="gain_v"></span>
+  </label>
+  <label>
+    <span>Smoothing</span>
+    <input type="range" id="smoothing" min="0.0" max="0.95" step="0.05">
+    <span class="val" id="smoothing_v"></span>
+  </label>
+</div>
+
+<div class="group">
+  <h2>Display</h2>
+  <label>
+    <span>FPS</span>
+    <input type="range" id="fps" min="5" max="30" step="1">
+    <span class="val" id="fps_v"></span>
+  </label>
+  <label>
+    <span>Mode</span>
+    <select id="mode">
+      <option value="draw">Vertical bars</option>
+      <option value="horizontal">Horizontal (center-out)</option>
+      <option value="ltr">Horizontal (left to right)</option>
+      <option value="waves">Waves (Joy Division)</option>
+      <option value="mario">Mario overworld</option>
+      <option value="mario_underground">Mario underground</option>
+      <option value="fractal">Fractal</option>
+      <option value="dancer">Dancer</option>
+      <option value="bar">Bar graph (built-in)</option>
+    </select>
+  </label>
+  <label>
+    <span>Fractal type</span>
+    <select id="fractal_type">
+      <option value="plasma">Plasma</option>
+      <option value="julia">Julia set</option>
+    </select>
+  </label>
+  <label>
+    <span>Bands</span>
+    <input type="range" id="bands" min="8" max="32" step="1">
+    <span class="val" id="bands_v"></span>
+  </label>
+  <label>
+    <span>Scheme</span>
+    <select id="scheme">
+      <option value="spectrum">Spectrum (rainbow)</option>
+      <option value="outrun">Outrun (synthwave)</option>
+      <option value="fire">Fire</option>
+      <option value="ocean">Ocean</option>
+      <option value="forest">Forest</option>
+      <option value="ice">Ice</option>
+      <option value="neon">Neon</option>
+      <option value="sunset">Sunset</option>
+      <option value="matrix">Matrix</option>
+      <option value="solid">Solid (custom)</option>
+    </select>
+  </label>
+  <label>
+    <span>Solid color</span>
+    <input type="color" id="solid_color" value="#00FFAA">
+  </label>
+  <label>
+    <span>Peak dots</span>
+    <span class="toggle">
+      <input type="checkbox" id="peak_dots">
+      <span class="slider"></span>
+    </span>
+  </label>
+  <label>
+    <span>Color cycle</span>
+    <span class="toggle">
+      <input type="checkbox" id="color_cycle">
+      <span class="slider"></span>
+    </span>
+  </label>
+  <label>
+    <span>Cycle speed</span>
+    <input type="range" id="color_cycle_speed" min="0.2" max="5.0" step="0.2">
+    <span class="val" id="color_cycle_speed_v"></span>
+  </label>
+</div>
+
+<div class="group">
+  <h2>Frequency Range</h2>
+  <label>
+    <span>Min Hz</span>
+    <input type="range" id="min_freq" min="20" max="500" step="10">
+    <span class="val" id="min_freq_v"></span>
+  </label>
+  <label>
+    <span>Max Hz</span>
+    <input type="range" id="max_freq" min="4000" max="20000" step="500">
+    <span class="val" id="max_freq_v"></span>
+  </label>
+</div>
+
+<div class="group">
+  <h2>Overlay Text</h2>
+  <label>
+    <span>Text</span>
+    <input type="text" id="overlay_text" placeholder="e.g. make.make">
+  </label>
+  <label>
+    <span>Color</span>
+    <input type="color" id="overlay_color" value="#000000">
+  </label>
+</div>
+
+<div class="group">
+  <h2>Idle</h2>
+  <label>
+    <span>Timeout (s)</span>
+    <input type="range" id="idle_seconds" min="2" max="30" step="1">
+    <span class="val" id="idle_seconds_v"></span>
+  </label>
+  <label>
+    <span>Idle app</span>
+    <input type="text" id="idle_app" placeholder="Time">
+  </label>
+</div>
+
+<div class="status" id="status">connecting...</div>
+
+<script>
+const API = '/api/settings';
+let debounce = null;
+
+// Fields and their types for building payloads.
+const FIELDS = {
+  enabled: 'bool',
+  gain: 'float', smoothing: 'float', fps: 'int', bands: 'int',
+  mode: 'string', fractal_type: 'string',
+  scheme: 'string', solid_color: 'string', peak_dots: 'bool',
+  color_cycle: 'bool', color_cycle_speed: 'float',
+  min_freq: 'float', max_freq: 'float',
+  overlay_text: 'string', overlay_color: 'string',
+  idle_seconds: 'float', idle_app: 'string'
+};
+
+function getEl(id) { return document.getElementById(id); }
+
+function setUI(settings) {
+  for (const [key, type] of Object.entries(FIELDS)) {
+    const el = getEl(key);
+    if (!el) continue;
+    if (type === 'bool') el.checked = !!settings[key];
+    else el.value = settings[key] ?? '';
+    const vEl = getEl(key + '_v');
+    if (vEl) vEl.textContent = settings[key] ?? '';
+  }
+}
+
+function collectChanged(key) {
+  const el = getEl(key);
+  const type = FIELDS[key];
+  let val;
+  if (type === 'bool') val = el.checked;
+  else if (type === 'int') val = parseInt(el.value, 10);
+  else if (type === 'float') val = parseFloat(el.value);
+  else val = el.value;
+  return { [key]: val };
+}
+
+function send(data) {
+  const status = getEl('status');
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(r => {
+    status.textContent = r.ok ? 'applied' : 'error';
+    setTimeout(() => status.textContent = 'connected', 1500);
+  }).catch(() => { status.textContent = 'disconnected'; });
+}
+
+function onInput(key) {
+  const vEl = getEl(key + '_v');
+  if (vEl) vEl.textContent = getEl(key).value;
+  clearTimeout(debounce);
+  debounce = setTimeout(() => send(collectChanged(key)), 80);
+}
+
+// Wire up event listeners.
+for (const [key, type] of Object.entries(FIELDS)) {
+  const el = getEl(key);
+  if (!el) continue;
+  const evt = (type === 'bool') ? 'change' :
+              (el.tagName === 'SELECT' || el.type === 'color') ? 'change' : 'input';
+  el.addEventListener(evt, () => onInput(key));
+}
+
+// Load current settings on page open.
+fetch(API).then(r => r.json()).then(data => {
+  setUI(data);
+  getEl('status').textContent = 'connected';
+}).catch(() => { getEl('status').textContent = 'disconnected'; });
+</script>
+</body>
+</html>

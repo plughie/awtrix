@@ -1,0 +1,92 @@
+# AWTRIX Music Visualizer configuration
+# Copy this file to "config.toml" and edit the values for your setup:
+#   cp config.example.toml config.toml
+# Then run: python -m visualizer
+
+[device]
+# IP address of your Ulanzi TC001 (AWTRIX 3). Find it in the AWTRIX web UI.
+ip = "192.168.1.50"
+
+# Transport: "http" or "mqtt". HTTP is the simplest (direct to the clock).
+transport = "http"
+
+# Name of the custom app created on the clock.
+app_name = "visualizer"
+
+[mqtt]
+# Only used when transport = "mqtt". Point this at your MQTT broker
+# (e.g. the Mosquitto add-on in Home Assistant).
+host = "192.168.1.10"
+port = 1883
+username = ""
+password = ""
+# The AWTRIX MQTT prefix (AWTRIX web UI -> MQTT settings, e.g. "awtrix_1a2b3c").
+prefix = "awtrix"
+
+[audio]
+# Substring to match the device name (case-insensitive).
+# When loopback = true this matches a SPEAKER name (system audio capture).
+# When loopback = false this matches a MICROPHONE/line-in name.
+# Set to "auto" (or leave empty) to follow the Windows default output device
+# automatically — switching headset/speakers is handled for you.
+device = "auto"
+
+# Capture system audio via WASAPI loopback (Windows). When true, `device`
+# matches a speaker/output device. Set false to capture a real microphone.
+loopback = true
+
+samplerate = 44100
+blocksize = 1024
+
+[render]
+# Number of frequency bands. The `bar` mode supports up to 16; others up to 32.
+bands = 32
+
+# Render mode: draw | horizontal | ltr | waves | mario | mario_underground
+#              | dancer | fractal | bar
+mode = "draw"
+
+# Target frames per second sent to the clock.
+fps = 20
+
+# Smoothing factor 0..1 (higher = smoother / slower to react).
+smoothing = 0.35
+
+# Frequency range mapped across the bands (Hz).
+min_freq = 60.0
+max_freq = 20000.0
+
+# Sensitivity multiplier applied after normalization.
+gain = 1.2
+
+# Color scheme: spectrum | outrun | fire | ocean | forest | ice | neon
+#               | sunset | matrix | solid
+scheme = "spectrum"
+
+# Color used when scheme = "solid" (hex).
+solid_color = "#00FFAA"
+
+# Draw a peak-hold dot above each bar.
+peak_dots = true
+
+# Text knocked out (negative) from the spectrum. Leave empty for no text.
+overlay_text = ""
+
+# Color of the overlay text (black = cutout/negative effect).
+overlay_color = "#000000"
+
+# Seconds of silence before switching away from the visualizer.
+idle_seconds = 5.0
+
+# App to show when idle (built-in names: Time, Date, Temperature, Humidity, Battery).
+idle_app = "Time"
+
+# Animate the color palette (smooth rotation across the bars).
+color_cycle = false
+color_cycle_speed = 1.0
+
+# Fractal sub-type when mode = "fractal": "plasma" or "julia".
+fractal_type = "julia"
+
+# Master enable toggle.
+enabled = true
