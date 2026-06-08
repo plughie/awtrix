@@ -33,7 +33,7 @@ struct ContentView: View {
     }
 }
 
-private struct SenderView: View {
+struct SenderView: View {
     private let appPrefix = "image_to_awtrix"
 
     @AppStorage("awtrixHost") private var host = ""
