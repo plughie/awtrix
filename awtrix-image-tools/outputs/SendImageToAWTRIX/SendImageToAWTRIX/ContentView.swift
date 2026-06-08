@@ -3,6 +3,37 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @State private var showSender = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 18) {
+                Image(systemName: "dotmatrix")
+                    .font(.system(size: 52, weight: .regular))
+                    .foregroundStyle(.tint)
+
+                Text("Send Image to AWTRIX")
+                    .font(.title2.weight(.semibold))
+
+                Button {
+                    showSender = true
+                } label: {
+                    Label("Open Sender", systemImage: "photo")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: 360)
+            }
+            .padding()
+            .navigationTitle("Send Image to AWTRIX")
+        }
+        .sheet(isPresented: $showSender) {
+            SenderView()
+        }
+    }
+}
+
+private struct SenderView: View {
     private let appPrefix = "image_to_awtrix"
 
     @AppStorage("awtrixHost") private var host = ""
@@ -119,6 +150,14 @@ struct ContentView: View {
                 .padding()
             }
             .navigationTitle("Send Image to AWTRIX")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                    .disabled(isSending)
+                }
+            }
         }
         .onChange(of: selectedPhoto) { _, item in
             Task { await loadPhoto(item) }
@@ -133,6 +172,8 @@ struct ContentView: View {
             Task { await loadFile(result) }
         }
     }
+
+    @Environment(\.dismiss) private var dismiss
 
     @MainActor
     private func connectToAwtrix() async {
