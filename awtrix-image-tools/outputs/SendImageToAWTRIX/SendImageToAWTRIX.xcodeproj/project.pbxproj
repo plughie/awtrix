@@ -13,6 +13,7 @@
 		01A000000000000000000004 /* AwtrixClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B000000000000000000004 /* AwtrixClient.swift */; };
 		01A000000000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01B000000000000000000005 /* Assets.xcassets */; };
 		01A000000000000000000006 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B000000000000000000008 /* SceneDelegate.swift */; };
+		01A000000000000000000007 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01B000000000000000000009 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		01B000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01B000000000000000000007 /* Send Image to AWTRIX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Send Image to AWTRIX.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		01B000000000000000000008 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		01B000000000000000000009 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,7 @@
 				01B000000000000000000003 /* ImageProcessor.swift */,
 				01B000000000000000000004 /* AwtrixClient.swift */,
 				01B000000000000000000008 /* SceneDelegate.swift */,
+				01B000000000000000000009 /* LaunchScreen.storyboard */,
 				01B000000000000000000005 /* Assets.xcassets */,
 				01B000000000000000000006 /* Info.plist */,
 			);
@@ -126,6 +129,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01A000000000000000000005 /* Assets.xcassets in Resources */,
+				01A000000000000000000007 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
