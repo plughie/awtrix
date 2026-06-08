@@ -56,6 +56,45 @@ struct SenderView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
+                    AwtrixAddressControl(host: $host)
+
+                    Button {
+                        Task { await connectToAwtrix() }
+                    } label: {
+                        if isCheckingConnection {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Label(isConnected ? "Connected" : "Connect", systemImage: isConnected ? "checkmark.circle.fill" : "network")
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isSending || isCheckingConnection || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    HStack(spacing: 12) {
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            Label("Photos", systemImage: "photo.on.rectangle")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!isConnected || isSending)
+
+                        Button {
+                            isImportingFile = true
+                        } label: {
+                            Label("Files", systemImage: "folder")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!isConnected || isSending)
+                    }
+
+                    Text(status)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
                     if let sourceImage {
                         ImageCropper(image: sourceImage, cropRect: $cropRect)
 
@@ -70,40 +109,6 @@ struct SenderView: View {
 
                     PixelPreview(pixelImage: pixelImage)
                         .frame(maxWidth: .infinity)
-
-                    HStack(spacing: 12) {
-                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                            Label("Photos", systemImage: "photo.on.rectangle")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(!isConnected || isSending)
-
-                        Button {
-                            isImportingFile = true
-                        } label: {
-                            Label("Files", systemImage: "folder")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(!isConnected || isSending)
-                    }
-
-                    AwtrixAddressControl(host: $host)
-
-                    Button {
-                        Task { await connectToAwtrix() }
-                    } label: {
-                        if isCheckingConnection {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Label(isConnected ? "Connected" : "Connect", systemImage: isConnected ? "checkmark.circle.fill" : "network")
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(isSending || isCheckingConnection || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                     Toggle("Loop until stopped", isOn: $shouldLoop)
                         .disabled(isSending)
@@ -141,13 +146,10 @@ struct SenderView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(pixelImage == nil || !isConnected || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                    Text(status)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding()
+                .frame(maxWidth: 620)
+                .frame(maxWidth: .infinity)
             }
             .navigationTitle("Send Image to AWTRIX")
             .toolbar {
@@ -481,7 +483,7 @@ private struct PixelPreview: View {
             } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(white: 0.08))
-                    .aspectRatio(1, contentMode: .fit)
+                    .frame(height: 96)
             }
         }
         .padding(10)
