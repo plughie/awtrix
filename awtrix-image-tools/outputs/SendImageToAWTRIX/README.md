@@ -18,7 +18,7 @@ The temporary AWTRIX app name is internal and cleaned up after each run.
 
 ## Use
 
-1. Open `Send Image to AWTRIX.xcodeproj` in Xcode.
+1. Open `SendImageToAWTRIX.xcodeproj` in Xcode.
 2. Pick your Apple developer team in Signing & Capabilities if Xcode asks.
 3. Run on an iPhone connected to the same Wi-Fi as the AWTRIX.
 4. Enter the IP address of your AWTRIX display.

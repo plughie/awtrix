@@ -17,7 +17,7 @@
                BlueprintIdentifier = "01E000000000000000000001"
                BuildableName = "Send Image to AWTRIX.app"
                BlueprintName = "SendImageToAWTRIX"
-               ReferencedContainer = "container:Send Image to AWTRIX.xcodeproj">
+               ReferencedContainer = "container:SendImageToAWTRIX.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,7 +45,7 @@
             BlueprintIdentifier = "01E000000000000000000001"
             BuildableName = "Send Image to AWTRIX.app"
             BlueprintName = "SendImageToAWTRIX"
-            ReferencedContainer = "container:Send Image to AWTRIX.xcodeproj">
+            ReferencedContainer = "container:SendImageToAWTRIX.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -69,7 +69,7 @@
             BlueprintIdentifier = "01E000000000000000000001"
             BuildableName = "Send Image to AWTRIX.app"
             BlueprintName = "SendImageToAWTRIX"
-            ReferencedContainer = "container:Send Image to AWTRIX.xcodeproj">
+            ReferencedContainer = "container:SendImageToAWTRIX.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

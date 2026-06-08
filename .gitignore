@@ -13,9 +13,6 @@ outputs/*.RENAME.zip
 # Android build output
 outputs/Send Image to AWTRIX Android/build/
 
-# Stale duplicate unpacked iOS copies from local testing
-outputs/Send Image to AWTRIX [0-9]*/
-
 # Local sender settings
 config.toml
 

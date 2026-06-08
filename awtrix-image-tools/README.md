@@ -52,9 +52,9 @@ Command-line options override the shared config defaults. If you pass an image p
 
 ## Phone apps
 
-- iOS source: `outputs/Send Image to AWTRIX`
+- iOS source: `outputs/SendImageToAWTRIX`
 - Android source: `outputs/Send Image to AWTRIX Android`
 
-For iOS, open `outputs/Send Image to AWTRIX/Send Image to AWTRIX.xcodeproj`. The `.xcodeproj` is a folder-like bundle; Xcode needs the whole bundle, including its internal `project.pbxproj` file. If Xcode reports that `project.pbxproj` is missing, open the project from a full git clone or downloaded repository zip rather than a copied `.xcodeproj` shell.
+For iOS, open `outputs/SendImageToAWTRIX/SendImageToAWTRIX.xcodeproj`. The app still appears as "Send Image to AWTRIX" on the device.
 
 Generated APK/zip artifacts and Android build outputs are ignored by git.
