@@ -35,6 +35,8 @@ struct ContentView: View {
 
 struct SenderView: View {
     private let appPrefix = "image_to_awtrix"
+    private let bodyFont = Font.system(size: 17)
+    private let statusFont = Font.system(size: 15)
 
     @AppStorage("awtrixHost") private var host = ""
     @AppStorage("animationSeconds") private var animationSeconds = 8.0
@@ -91,7 +93,7 @@ struct SenderView: View {
                     }
 
                     Text(status)
-                        .font(.callout)
+                        .font(statusFont)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -152,6 +154,7 @@ struct SenderView: View {
                 .frame(maxWidth: .infinity)
             }
             .navigationTitle("Send Image to AWTRIX")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
@@ -161,6 +164,8 @@ struct SenderView: View {
                 }
             }
         }
+        .font(bodyFont)
+        .dynamicTypeSize(.medium)
         .onChange(of: selectedPhoto) { _, item in
             Task { await loadPhoto(item) }
         }
@@ -295,7 +300,7 @@ private struct AwtrixAddressControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("AWTRIX IP Address", systemImage: "network")
-                .font(.headline)
+                .font(.system(size: 17, weight: .semibold))
 
             TextField("192.168.1.50", text: $host)
                 .textInputAutocapitalization(.never)
