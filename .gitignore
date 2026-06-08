@@ -21,3 +21,4 @@ config.toml
 
 # Local Xcode verification builds
 .derivedData-ios-check/
+.derivedData-awtrix-square-check/
