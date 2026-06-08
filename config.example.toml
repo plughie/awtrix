@@ -1,0 +1,34 @@
+[device]
+# Leave blank to use the AWTRIX_IP environment variable, or set an IP/hostname here.
+display = ""
+name = "image_to_awtrix"
+connect_retries = 5
+
+[animation]
+seconds = 8
+direction = "top-to-bottom"
+center_square = false
+loop = false
+keep_in_rotation = false
+
+[image]
+# Optional single image path. Relative paths are resolved from this config file.
+path = ""
+
+[output]
+preview = ""
+quiet = false
+
+# Optional queue. Each item can override name, seconds, direction, center_square,
+# loop, keep_in_rotation, and preview.
+#
+# [[images]]
+# path = "images/first.png"
+# seconds = 8
+# direction = "top-to-bottom"
+#
+# [[images]]
+# path = "images/second.png"
+# seconds = 5
+# direction = "left-to-right"
+# center_square = true

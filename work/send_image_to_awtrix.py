@@ -8,6 +8,7 @@ import select
 import sys
 import termios
 import time
+import tomllib
 import tty
 import urllib.parse
 from pathlib import Path
@@ -21,6 +22,28 @@ FRAME_HEIGHT = 8
 BAR_SIZE = 4
 SATURATION = 1.35
 CONTRAST = 1.18
+CONFIG_DEFAULTS = {
+    "device": {
+        "display": None,
+        "name": APP_NAME,
+        "connect_retries": 5,
+    },
+    "animation": {
+        "seconds": 8.0,
+        "direction": "top-to-bottom",
+        "center_square": False,
+        "loop": False,
+        "keep_in_rotation": False,
+    },
+    "image": {
+        "path": None,
+    },
+    "output": {
+        "preview": None,
+        "quiet": False,
+    },
+}
+DIRECTIONS = ("top-to-bottom", "bottom-to-top", "left-to-right", "right-to-left")
 
 
 class KeyWatcher:
@@ -78,6 +101,139 @@ class Awtrix:
 
     def post(self, path, payload=None):
         return self.request("POST", path, payload)
+
+
+def merged_defaults():
+    return {section: values.copy() for section, values in CONFIG_DEFAULTS.items()}
+
+
+def resolve_config_path(value):
+    requested = Path(value).expanduser()
+    repo_root = Path(__file__).resolve().parents[1]
+    candidates = []
+
+    if requested.is_absolute():
+        candidates.append(requested)
+        candidates.append(requested.with_name("config.example.toml"))
+    else:
+        candidates.append(Path.cwd() / requested)
+        candidates.append(repo_root / requested)
+        candidates.append((Path.cwd() / requested).with_name("config.example.toml"))
+        candidates.append(repo_root / "config.example.toml")
+
+    seen = set()
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def load_config(value):
+    config = merged_defaults()
+    config["images"] = []
+    path = resolve_config_path(value)
+    if path is None:
+        return config, None
+
+    with path.open("rb") as handle:
+        loaded = tomllib.load(handle)
+
+    for section, values in loaded.items():
+        if section not in config or not isinstance(values, dict):
+            continue
+        for key, setting in values.items():
+            if key in config[section]:
+                config[section][key] = setting
+    images = loaded.get("images", [])
+    if images:
+        if not isinstance(images, list) or not all(isinstance(item, dict) for item in images):
+            raise SystemExit("[[images]] entries must be tables in config.toml")
+        config["images"] = images
+    return config, path
+
+
+def config_value(args_value, config, section, key):
+    return args_value if args_value is not None else config[section][key]
+
+
+def require_bool(value, name):
+    if isinstance(value, bool):
+        return value
+    raise SystemExit(f"{name} must be true or false in config.toml")
+
+
+def require_number(value, name):
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    raise SystemExit(f"{name} must be a number in config.toml")
+
+
+def require_int(value, name):
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    raise SystemExit(f"{name} must be an integer in config.toml")
+
+
+def require_text_or_none(value, name):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        return stripped if stripped else None
+    raise SystemExit(f"{name} must be text in config.toml")
+
+
+def resolve_file_path(value, base_dir=None):
+    path = Path(os.path.expandvars(value)).expanduser()
+    if path.is_absolute() or base_dir is None:
+        return path
+    return base_dir / path
+
+
+def item_value(item, key, default):
+    return item[key] if key in item else default
+
+
+def make_job(item, base_settings, base_dir):
+    path = require_text_or_none(item.get("path"), "image.path")
+    if not path:
+        raise SystemExit("image.path is required for each config image")
+
+    direction = require_text_or_none(item_value(item, "direction", base_settings["direction"]), "animation.direction")
+    if direction not in DIRECTIONS:
+        raise SystemExit(f"animation.direction must be one of: {', '.join(DIRECTIONS)}")
+
+    preview = require_text_or_none(item_value(item, "preview", base_settings["preview"]), "output.preview")
+    if preview:
+        preview = str(resolve_file_path(preview, base_dir))
+
+    return {
+        "path": resolve_file_path(path, base_dir),
+        "name": require_text_or_none(item_value(item, "name", base_settings["name"]), "device.name") or APP_NAME,
+        "seconds": require_number(item_value(item, "seconds", base_settings["seconds"]), "animation.seconds"),
+        "direction": direction,
+        "center_square": require_bool(
+            item_value(item, "center_square", base_settings["center_square"]), "animation.center_square"
+        ),
+        "loop": require_bool(item_value(item, "loop", base_settings["loop"]), "animation.loop"),
+        "keep_in_rotation": require_bool(
+            item_value(item, "keep_in_rotation", base_settings["keep_in_rotation"]),
+            "animation.keep_in_rotation",
+        ),
+        "preview": preview,
+    }
+
+
+def config_image_items(config):
+    if config["images"]:
+        return config["images"]
+    if require_text_or_none(config["image"]["path"], "image.path"):
+        return [config["image"]]
+    return []
 
 
 def normalize_host(value):
@@ -282,80 +438,141 @@ def save_preview(pixels, height, path):
     image.resize((WIDTH * 8, height * 8), Image.Resampling.NEAREST).save(path)
 
 
+def run_image_job(awtrix, job, connect_retries, quiet, no_send):
+    image_path = job["path"]
+    if not image_path.exists():
+        raise SystemExit(f"image not found: {image_path}")
+    if job["seconds"] <= 0:
+        raise SystemExit("--seconds must be greater than 0")
+
+    pixels, height = image_to_pixels(image_path, center_square=job["center_square"])
+    frames = make_frames(pixels, height, job["direction"])
+
+    if job["preview"]:
+        save_preview(pixels, height, job["preview"])
+
+    if not quiet:
+        crop_mode = "center square" if job["center_square"] else "full rectangle"
+        print(f"converted {image_path} using {crop_mode}: 32x{height}, {len(frames)} frames")
+
+    if no_send:
+        return
+
+    prepare_for_upload(awtrix, job["name"], job["keep_in_rotation"], connect_retries, quiet=quiet)
+    send_frames(
+        awtrix,
+        job["name"],
+        frames,
+        job["seconds"],
+        job["direction"],
+        job["loop"],
+        job["keep_in_rotation"],
+        quiet=quiet,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Send a cropped/scaled image to AWTRIX like the phone app.")
     parser.add_argument("image", nargs="?", help="source image path")
-    parser.add_argument("--display", help="AWTRIX IP address or hostname; defaults to $AWTRIX_IP")
-    parser.add_argument("--name", default=APP_NAME, help="temporary AWTRIX app name")
-    parser.add_argument("--seconds", type=float, default=8, help="seconds per animation cycle")
+    parser.add_argument("--config", default="config.toml", help="config file path; falls back to config.example.toml")
+    parser.add_argument("--display", help="AWTRIX IP address or hostname; defaults to config or $AWTRIX_IP")
+    parser.add_argument("--name", help="temporary AWTRIX app name")
+    parser.add_argument("--seconds", type=float, help="seconds per animation cycle")
     parser.add_argument(
         "--direction",
-        choices=["top-to-bottom", "bottom-to-top", "left-to-right", "right-to-left"],
-        default="top-to-bottom",
+        choices=DIRECTIONS,
         help="animation direction",
     )
-    parser.add_argument("--center-square", action="store_true", help="crop the center square before scaling")
-    parser.add_argument("--loop", action="store_true", help="loop until q or Ctrl-C")
-    parser.add_argument("--keep-in-rotation", action="store_true", help="save and leave the app in AWTRIX rotation")
+    parser.add_argument(
+        "--center-square",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="crop the center square before scaling",
+    )
+    parser.add_argument("--loop", action=argparse.BooleanOptionalAction, default=None, help="loop until q or Ctrl-C")
+    parser.add_argument(
+        "--keep-in-rotation",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="save and leave the app in AWTRIX rotation",
+    )
     parser.add_argument("--clean", action="store_true", help="clear generated AWTRIX image apps and exit")
     parser.add_argument("--preview", help="write a nearest-neighbor preview PNG")
     parser.add_argument("--no-send", action="store_true", help="convert and print frame info without contacting AWTRIX")
-    parser.add_argument("--connect-retries", type=int, default=5, help="AWTRIX connection attempts before failing")
-    parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--connect-retries", type=int, help="AWTRIX connection attempts before failing")
+    parser.add_argument("--quiet", action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args()
 
-    if args.image is None and not args.clean:
+    config, config_path = load_config(args.config)
+
+    config_items = config_image_items(config)
+    if args.image is None and not config_items and not args.clean:
         parser.print_help()
         raise SystemExit(2)
 
-    display = args.display or os.environ.get("AWTRIX_IP")
+    display = require_text_or_none(config_value(args.display, config, "device", "display"), "device.display")
+    display = display or os.environ.get("AWTRIX_IP")
     if not display:
         raise SystemExit("AWTRIX display not set. Use --display HOST or set AWTRIX_IP.")
+    name = require_text_or_none(config_value(args.name, config, "device", "name"), "device.name") or APP_NAME
+    seconds = require_number(config_value(args.seconds, config, "animation", "seconds"), "animation.seconds")
+    direction = require_text_or_none(
+        config_value(args.direction, config, "animation", "direction"), "animation.direction"
+    )
+    if direction not in DIRECTIONS:
+        raise SystemExit(f"animation.direction must be one of: {', '.join(DIRECTIONS)}")
+    center_square = require_bool(
+        config_value(args.center_square, config, "animation", "center_square"), "animation.center_square"
+    )
+    loop = require_bool(config_value(args.loop, config, "animation", "loop"), "animation.loop")
+    keep_in_rotation = require_bool(
+        config_value(args.keep_in_rotation, config, "animation", "keep_in_rotation"),
+        "animation.keep_in_rotation",
+    )
+    preview = require_text_or_none(config_value(args.preview, config, "output", "preview"), "output.preview")
+    quiet = require_bool(config_value(args.quiet, config, "output", "quiet"), "output.quiet")
+    connect_retries = require_int(
+        config_value(args.connect_retries, config, "device", "connect_retries"), "device.connect_retries"
+    )
+    if connect_retries <= 0:
+        raise SystemExit("--connect-retries must be greater than 0")
+    base_settings = {
+        "name": name,
+        "seconds": seconds,
+        "direction": direction,
+        "center_square": center_square,
+        "loop": loop,
+        "keep_in_rotation": keep_in_rotation,
+        "preview": preview,
+    }
 
     awtrix = Awtrix(display)
     if args.clean:
         try:
-            stats = get_stats_with_retry(awtrix, attempts=args.connect_retries)
-            if not args.quiet:
+            stats = get_stats_with_retry(awtrix, attempts=connect_retries)
+            if not quiet:
                 print(f"connected to {stats.get('uid', awtrix.host)} at {stats.get('ip_address', awtrix.host)}")
-            cleanup_custom_apps(awtrix, args.name, quiet=args.quiet)
-            if not args.quiet:
+            cleanup_custom_apps(awtrix, name, quiet=quiet)
+            if not quiet:
                 print(f"loop after cleanup: {awtrix.get_json('/api/loop')}")
             return
         except Exception as error:
             raise SystemExit(str(error))
 
-    image_path = Path(args.image).expanduser()
-    if not image_path.exists():
-        raise SystemExit(f"image not found: {image_path}")
-    if args.seconds <= 0:
-        raise SystemExit("--seconds must be greater than 0")
-
-    pixels, height = image_to_pixels(image_path, center_square=args.center_square)
-    frames = make_frames(pixels, height, args.direction)
-
-    if args.preview:
-        save_preview(pixels, height, args.preview)
-
-    if not args.quiet:
-        crop_mode = "center square" if args.center_square else "full rectangle"
-        print(f"converted {image_path} using {crop_mode}: 32x{height}, {len(frames)} frames")
-
-    if args.no_send:
-        return
+    if not quiet:
+        if config_path:
+            print(f"using config: {config_path}")
+    config_dir = config_path.parent if config_path else None
+    if args.image:
+        jobs = [make_job({"path": args.image}, base_settings, None)]
+    else:
+        jobs = [make_job(item, base_settings, config_dir) for item in config_items]
 
     try:
-        prepare_for_upload(awtrix, args.name, args.keep_in_rotation, args.connect_retries, quiet=args.quiet)
-        send_frames(
-            awtrix,
-            args.name,
-            frames,
-            args.seconds,
-            args.direction,
-            args.loop,
-            args.keep_in_rotation,
-            quiet=args.quiet,
-        )
+        for index, job in enumerate(jobs, start=1):
+            if len(jobs) > 1 and not quiet:
+                print(f"image {index} of {len(jobs)}")
+            run_image_job(awtrix, job, connect_retries, quiet, args.no_send)
     except Exception as error:
         raise SystemExit(str(error))
 
