@@ -421,28 +421,31 @@ private struct PixelPreview: View {
     var pixelImage: PixelImage?
 
     var body: some View {
-        let width = pixelImage?.width ?? 32
-        let height = pixelImage?.height ?? 32
-        Grid(horizontalSpacing: 1, verticalSpacing: 1) {
-            ForEach(0..<height, id: \.self) { row in
-                GridRow {
-                    ForEach(0..<width, id: \.self) { column in
-                        Rectangle()
-                            .fill(color(row: row, column: column))
-                            .aspectRatio(1, contentMode: .fit)
+        Group {
+            if let pixelImage {
+                let width = pixelImage.width
+                let height = pixelImage.height
+                Grid(horizontalSpacing: 1, verticalSpacing: 1) {
+                    ForEach(0..<height, id: \.self) { row in
+                        GridRow {
+                            ForEach(0..<width, id: \.self) { column in
+                                Rectangle()
+                                    .fill(pixelImage.colors[row * pixelImage.width + column])
+                                    .aspectRatio(1, contentMode: .fit)
+                            }
+                        }
                     }
                 }
+                .aspectRatio(CGFloat(width) / CGFloat(height), contentMode: .fit)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(white: 0.08))
+                    .aspectRatio(1, contentMode: .fit)
             }
         }
         .padding(10)
         .background(.black)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .aspectRatio(CGFloat(width) / CGFloat(height), contentMode: .fit)
-    }
-
-    private func color(row: Int, column: Int) -> Color {
-        guard let pixelImage else { return Color(white: 0.08) }
-        return pixelImage.colors[row * pixelImage.width + column]
     }
 }
 
