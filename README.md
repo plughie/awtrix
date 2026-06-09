@@ -8,7 +8,7 @@ Tools for the AWTRIX / Svitrix 32×8 LED matrix display.
 awtrix/
 ├── awtrix-image-tools/        # Send and animate images on the display
 │   ├── work/                  # Python scripts (sender, probes, tests)
-│   ├── outputs/               # iOS, Android, and macOS app source
+│   ├── outputs/               # iOS/iPad/Mac and Android app source
 │   ├── config.example.toml    # Template config
 │   └── README.md
 │

@@ -55,6 +55,6 @@ Command-line options override the shared config defaults. If you pass an image p
 - iOS source: `outputs/SendImageToAWTRIX`
 - Android source: `outputs/Send Image to AWTRIX Android`
 
-For iOS, open `outputs/SendImageToAWTRIX/SendImageToAWTRIX.xcodeproj`. The app still appears as "Send Image to AWTRIX" on the device.
+For iOS, open `outputs/SendImageToAWTRIX/SendImageToAWTRIX.xcodeproj`. The app still appears as "Send Image to AWTRIX" on the device. It can also run on Apple Silicon Macs as a "Designed for iPad/iPhone" app; select "My Mac" as the Xcode run destination.
 
 Generated APK/zip artifacts and Android build outputs are ignored by git.
