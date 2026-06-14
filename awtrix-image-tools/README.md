@@ -52,9 +52,15 @@ Command-line options override the shared config defaults. If you pass an image p
 
 ## Phone apps
 
-- iOS source: `outputs/SendImageToAWTRIX`
-- Android source: `outputs/Send Image to AWTRIX Android`
+- AWTRIX iOS source: `outputs/SendImageToAWTRIX`
+- AWTRIX Android source: `outputs/Send Image to AWTRIX Android`
+- SendImageToCooLED iOS Bluetooth source: `outputs/SendImageToCooLED`
+- SendImageToCooLED Android Bluetooth source: `outputs/SendImageToCooLED Android`
 
-For iOS, open `outputs/SendImageToAWTRIX/SendImageToAWTRIX.xcodeproj`. The app still appears as "Send Image to AWTRIX" on the device. It can also run on Apple Silicon Macs as a "Designed for iPad/iPhone" app; select "My Mac" as the Xcode run destination.
+For AWTRIX iOS, open `outputs/SendImageToAWTRIX/SendImageToAWTRIX.xcodeproj`. The AWTRIX app still appears as "Send Image to AWTRIX" on the device. It can also run on Apple Silicon Macs as a "Designed for iPad/iPhone" app; select "My Mac" as the Xcode run destination.
+
+For CooLED iOS, open `outputs/SendImageToCooLED/SendImageToCooLED.xcodeproj`.
+
+The CoolLEDX apps target a 64x16 Bluetooth display and use the packet format from `NunoMiguelVeloso/coolledux-driver`.
 
 Generated APK/zip artifacts and Android build outputs are ignored by git.
